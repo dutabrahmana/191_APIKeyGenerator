@@ -80,3 +80,74 @@ app.post("/api/admin/register", (req, res) => {
   });
 });
 
+// =====================================
+// ===== ADMIN LOGIN =====
+app.post("/admin/login", (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.json({ success: false, message: "Email dan password wajib diisi" });
+    }
+
+    const sql = "SELECT * FROM admin WHERE email = ? LIMIT 1";
+
+    db.query(sql, [email], (err, rows) => {
+        if (err) {
+            console.log(err);
+            return res.json({ success: false, message: "Kesalahan server" });
+        }
+
+        if (rows.length === 0) {
+            return res.json({ success: false, message: "Email atau password salah" });
+        }
+
+        const admin = rows[0];
+
+        bcrypt.compare(password, admin.password, (err, match) => {
+            if (err) {
+                console.log(err);
+                return res.json({ success: false, message: "Kesalahan server" });
+            }
+
+            if (!match) {
+                return res.json({ success: false, message: "Email atau password salah" });
+            }
+
+            return res.json({ success: true, message: "Login berhasil" });
+        });
+    });
+});
+
+// =====================================
+// DASHBOARD ADMIN - AMBIL DATA USER+API
+// =====================================
+app.get("/api/admin/dashboard", (req, res) => {
+  const sql = `
+    SELECT user.id, first_name, last_name, email, apikey.apikey, apikey.out_of_date
+    FROM user
+    LEFT JOIN apikey ON apikey.id = user.apikey_id
+    ORDER BY user.id DESC
+  `;
+
+  db.query(sql, (err, rows) => {
+    if (err) return res.json({ success: false });
+
+    res.json({ success: true, data: rows });
+  });
+});
+
+// =====================================
+// HAPUS USER (DARI DASHBOARD ADMIN)
+// =====================================
+app.delete("/api/admin/delete/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql = "DELETE FROM user WHERE id = ?";
+
+  db.query(sql, [id], (err) => {
+    if (err) return res.json({ success: false });
+
+    res.json({ success: true });
+  });
+});
+
