@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Pembuat API Key - Neon Dark</title>
+
+  <style>
+    /* ===========================
+       GLOBAL DARK + NEON THEME
+    ============================ */
+    body {
+      background: #0a0a0f;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #e6e6e6;
+    }
+
+    .container {
+      max-width: 430px;
+      margin: 80px auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: #111119;
+      padding: 32px;
+      border-radius: 18px;
+      box-shadow:
+        0 0 20px rgba(255, 0, 153, 0.3),
+        inset 0 0 25px rgba(0, 200, 255, 0.12);
+      border: 1px solid rgba(255, 0, 170, 0.25);
+    }
+
+    h2, h3 {
+      text-align: center;
+      margin: 0 0 16px 0;
+      color: #ff67d4;
+      text-shadow: 0 0 8px #ff2bb0;
+      letter-spacing: 1px;
+    }
+
+    /* ===========================
+       INPUT & TEXTAREA
+    ============================ */
+    input, textarea {
+      width: 100%;
+      padding: 14px;
+      background: #0f0f17;
+      border: 1px solid #333;
+      border-radius: 12px;
+      margin-top: 14px;
+      color: #fff;
+      font-size: 14px;
+      box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.2);
+      transition: 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #00eaff;
+      box-shadow:
+        0 0 10px #00eaff,
+        inset 0 0 12px rgba(0, 255, 255, 0.45);
+      outline: none;
+    }
+
+    textarea {
+      resize: none;
+      height: 90px;
+    }
+
+    /* ===========================
+       BUTTON NEON GLOW
+    ============================ */
+    button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 16px;
+      border: none;
+      font-size: 15px;
+      border-radius: 12px;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(45deg, #ff008c, #ff00ea);
+      box-shadow:
+        0 0 15px #ff00b3,
+        0 0 30px rgba(255, 0, 200, 0.5);
+      transition: 0.25s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow:
+        0 0 25px #ff33dd,
+        0 0 50px rgba(255, 0, 200, 0.7);
+    }
+
+    /* Status Message */
+    .small {
+      font-size: 13px;
+      color: #9bdcff;
+      margin-top: 10px;
+      text-align: center;
+      text-shadow: 0 0 6px #00d5ff;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="card">
+      
+      <h2>Buat API Key</h2>
+
+      <button id="btn-generate">Generate API Key</button>
+
+      <textarea id="apikey" readonly>API Key akan muncul di sini...</textarea>
+      <div class="small" id="msg"></div>
+
+      <h3>Data User</h3>
+
+      <input id="firstname" placeholder="First Name">
+      <input id="lastname" placeholder="Last Name">
+      <input id="email" placeholder="Email">
+
+      <button id="btn-save">Save User</button>
+
+    </div>
+  </div>
+
+<script>
+/* Helper */
+const msgEl = document.getElementById('msg');
+function showMsg(text) {
+  msgEl.textContent = text;
+  setTimeout(() => msgEl.textContent = '', 4000);
+}
+
+/* Generate API Key */
+document.getElementById('btn-generate').addEventListener('click', async () => {
+  document.getElementById('apikey').value = 'Generating...';
+
+  const res = await fetch('/api/generate', { method: 'POST' });
+  const data = await res.json();
+
+  if (data.success) {
+    document.getElementById('apikey').value = data.api_key;
+    showMsg('API Key generated.');
+  } else {
+    document.getElementById('apikey').value = 'Generate failed';
+  }
+});
+
+/* Save User */
+document.getElementById('btn-save').addEventListener('click', async () => {
+  const api_key = document.getElementById('apikey').value.trim();
+
+  if (!api_key || api_key.includes("API Key") || api_key === "Generating...") {
+    return alert("Generate API Key dulu!");
+  }
+
+  const body = {
+    first_name: document.getElementById('firstname').value,
+    last_name: document.getElementById('lastname').value,
+    email: document.getElementById('email').value,
+    api_key: api_key
+  };
+
+  const res = await fetch('/api/user', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("User berhasil disimpan!");
+    showMsg("User saved successfully!");
+  } else {
+    alert("Gagal menyimpan user: " + data.error);
+  }
+});
+</script>
+
+</body>
+</html>

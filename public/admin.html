@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Neon Mode</title>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #0a0f1f;
+      color: #e2e8ff;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #7f5af0;
+      text-shadow: 0 0 20px #7f5af0;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      color: #00d4ff;
+      text-shadow: 0 0 10px #00d4ffb4;
+    }
+
+    /* Neon Card */
+    .card {
+      background: #111629;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 25px #7f5af033;
+      border: 1px solid #7f5af033;
+    }
+
+    /* NEON TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      background: #0d1326;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #7f5af033;
+      box-shadow: 0 0 25px #7f5af022;
+    }
+
+    th {
+      background: #7f5af0;
+      color: white;
+      padding: 12px;
+      text-shadow: 0 0 10px white;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #1d2342;
+    }
+
+    tr:hover {
+      background: #202a49;
+      transition: 0.2s;
+    }
+
+    /* Neon Delete Button */
+    .delete-btn {
+      background: #ff003c;
+      border: none;
+      padding: 8px 15px;
+      cursor: pointer;
+      color: white;
+      border-radius: 6px;
+      box-shadow: 0 0 12px #ff003caa;
+      transition: 0.2s;
+    }
+
+    .delete-btn:hover {
+      box-shadow: 0 0 18px #ff003c;
+      transform: scale(1.05);
+    }
+
+    /* Neon Logout Button */
+    .logout-btn {
+      background: #00d4ff;
+      border: none;
+      padding: 8px 15px;
+      cursor: pointer;
+      color: #000;
+      border-radius: 6px;
+      float: right;
+      margin-bottom: 10px;
+      box-shadow: 0 0 12px #00d4ffb4;
+    }
+
+    .logout-btn:hover {
+      box-shadow: 0 0 20px #00d4ff;
+      transform: scale(1.05);
+    }
+
+    /* Neon Status */
+    .status-online {
+      color: #00ff9d;
+      font-weight: bold;
+      text-shadow: 0 0 6px #00ff9d;
+    }
+
+    .status-offline {
+      color: #ff0055;
+      font-weight: bold;
+      text-shadow: 0 0 6px #ff0055;
+    }
+
+  </style>
+
+</head>
+<body>
+
+<h1>Admin Dashboard</h1>
+<button class="logout-btn" onclick="logout()">Logout</button>
+
+<div class="card">
+  <h2>👤 List User & API Key</h2>
+
+  <table id="Table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nama Depan</th>
+        <th>Nama Belakang</th>
+        <th>Email</th>
+        <th>API Key</th>
+        <th>Status Key</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+async function loadDashboard() {
+  try {
+    const res = await fetch('/api/admin/dashboard');
+    const data = await res.json();
+
+    if (!data.success) return alert("Gagal memuat data dashboard");
+
+    const tbody = document.querySelector("#Table tbody");
+    tbody.innerHTML = "";
+
+    data.data.forEach(u => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${u.id}</td>
+          <td>${u.first_name}</td>
+          <td>${u.last_name}</td>
+          <td>${u.email}</td>
+          <td>${u.apikey || '-'}</td>
+          <td>
+            ${
+              new Date(u.out_of_date) > new Date()
+              ? "<span class='status-online'>online</span>"
+              : "<span class='status-offline'>offline</span>"
+            }
+          </td>
+          <td><button class="delete-btn" onclick="deleteUser(${u.id})">Delete</button></td>
+        </tr>
+      `;
+    });
+
+  } catch (err) {
+    console.error(err);
+    alert("Terjadi kesalahan saat memuat dashboard");
+  }
+}
+
+async function deleteUser(id) {
+  if (!confirm("Yakin ingin menghapus user ini?")) return;
+  try {
+    const res = await fetch(`/api/admin/delete/${id}`, {
+      method: "DELETE"
+    });
+
+    const data = await res.json();
+    
+    alert(data.success ? "User berhasil dihapus" : "Gagal menghapus user");
+
+    loadDashboard();
+  } catch(err) {
+    console.error(err);
+    alert("Gagal menghapus user");
+  }
+}
+
+function logout() {
+  window.location.href = "/login";
+}
+
+// Load saat halaman dibuka
+loadDashboard();
+</script>
+
+</body>
+</html>
