@@ -54,3 +54,29 @@ app.post('/api/user', (req, res) => {
   });
 });
 
+// =====================================
+// REGISTER ADMIN ✅ (FIXED)
+// =====================================
+app.post("/api/admin/register", (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.json({ success: false, message: "Email dan password wajib diisi" });
+  }
+
+  bcrypt.hash(password, 10, (err, hash) => {
+    if (err) return res.json({ success: false, message: "Gagal hash password" });
+
+    const sql = "INSERT INTO admin (email, password) VALUES (?, ?)";
+
+    db.query(sql, [email, hash], (err2) => {
+      if (err2) {
+        console.log(err2);
+        return res.json({ success: false, message: "Email sudah digunakan" });
+      }
+
+      res.json({ success: true, message: "Admin registered!" });
+    });
+  });
+});
+
